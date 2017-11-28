@@ -1,0 +1,9 @@
+blockdiag
+CommonMark
+nwdiag
+recommonmark
+Sphinx
+sphinx-rtd-theme
+sphinxcontrib-blockdiag
+sphinxcontrib-nwdiag
+awscli
