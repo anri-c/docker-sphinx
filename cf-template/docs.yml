@@ -1,0 +1,91 @@
+Parameters:
+  BucketName:
+    Type: "String"
+  IpAddress:
+    Type: "String"
+    Default: "0.0.0.0/0"
+  KeySerial:
+    Type: "String"
+  KeyStatus:
+    Type: "String"
+    AllowedValues:
+      - "Active"
+      - "Inactive"
+    Default: "Active"
+
+Resources:
+  DocsBucket:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName:
+        Ref: "BucketName"
+      AccessControl: "PublicRead"
+      WebsiteConfiguration:
+        IndexDocument: "index.html"
+
+  DocsBucketPolicy:
+    Type: "AWS::S3::BucketPolicy"
+    Properties:
+      Bucket:
+        Ref: "DocsBucket"
+      PolicyDocument:
+        Statement:
+          -
+            Effect: "Allow"
+            Action:
+              - "s3:GetObject"
+            Resource:
+              "Fn::Join":
+                - ""
+                - - "arn:aws:s3:::"
+                  - Ref: "BucketName"
+                  - "/*"
+            Condition:
+              IpAddress:
+                "aws:SourceIp":
+                  Ref: "IpAddress"
+            Principal: "*"
+
+  PipelinesToS3:
+    Type: "AWS::IAM::User"
+
+  PipelinesToS3Policy:
+    Type: "AWS::IAM::Policy"
+    Properties:
+      PolicyName: "PipelinesToS3Policy"
+      Users:
+        - Ref: "PipelinesToS3"
+      PolicyDocument:
+        Statement:
+          - Effect: "Allow"
+            Action:
+              - "s3:List*"
+              - "s3:Get*"
+              - "s3:Put*"
+              - "s3:DeleteObject"
+            Resource:
+              "Fn::Join":
+                - ""
+                - - "arn:aws:s3:::"
+                  - Ref: "DocsBucket"
+                  - "/*"
+
+  PipelinesToS3Key:
+    Type: "AWS::IAM::AccessKey"
+    Properties:
+      Serial:
+        Ref: "KeySerial"
+      Status:
+        Ref: "KeyStatus"
+      UserName:
+        Ref: "PipelinesToS3"
+
+Outputs:
+  AccessKey:
+    Value:
+      Ref: "PipelinesToS3Key"
+  SecretAccessKey:
+    Value:
+      "Fn::GetAtt":
+        - "PipelinesToS3Key"
+        - "SecretAccessKey"

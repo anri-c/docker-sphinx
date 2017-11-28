@@ -1,0 +1,10 @@
+image: asato/sphinx:latest
+
+pipelines:
+  branches:
+    master:
+      - step:
+          script:
+            - make html
+            - aws s3 sync _build/html/ s3://$BUCKET --exact-timestamp --delete
+
